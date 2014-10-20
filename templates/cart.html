@@ -4,10 +4,10 @@
     <tr><th>Melon Name</th><th>Quantity</th><th>Price</th><th>Total</th></tr>
 
     {% for id in current_cart %}
-        <tr><td>{{ current_cart[id][0] }}</td> 
+        <tr><td>{{ current_cart[id]['common_name'] }}</td> 
             <td>{{ session['cart'][id] }}</td>
-            <td>${{ '%.02f' % current_cart[id][1] }}</td>
-            <td>${{ '%.02f' % (session['cart'][id] * current_cart[id][1]) }}</td>
+            <td>${{ '%.02f' % current_cart[id]['price'] }}</td>
+            <td>${{ '%.02f' % (session['cart'][id] * current_cart[id]['price']) }}</td>
         </tr>
     {% endfor %}
 </table>

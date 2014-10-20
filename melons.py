@@ -37,8 +37,10 @@ def shopping_cart():
     total = 0
     for key in session['cart']:
         melon = model.get_melon_by_id(key)
-        current_cart[key] = [melon.common_name, melon.price]
+        #current_cart[key] = [melon.common_name, melon.price]
+        current_cart[key] = {'common_name': melon.common_name, 'price': melon.price}
         total += melon.price * session['cart'][key]
+    print current_cart
     return render_template("cart.html",current_cart = current_cart, total = total)
 
 @app.route("/add_to_cart/<int:id>")
@@ -66,14 +68,27 @@ def add_to_cart(id):
 
 @app.route("/login", methods=["GET"])
 def show_login():
-    return render_template("login.html")
+    #if sesssion has customer, go to process_login
+    if 'customer' in session:
+        flash("You're already logged in. Shop away!")
+        return redirect ("/melons")
+    else: 
+       return render_template("login.html")
 
 
 @app.route("/login", methods=["POST"])
 def process_login():
     """TODO: Receive the user's login credentials located in the 'request.form'
     dictionary, look up the user, and store them in the session."""
-    return "Oops! This needs to be implemented"
+    email = request.form.get("email")
+    if model.get_customer_by_email(email) is None:
+        flash("You aren't a customer yet!")
+    else:
+        customer = model.get_customer_by_email(email)
+        first_name, last_name, email = customer.first_name, customer.last_name, customer.email
+        session['customer'] = email
+        flash("Logged in. Shop away!")
+    return redirect ("/melons")
 
 
 @app.route("/checkout")
@@ -81,6 +96,13 @@ def checkout():
     """TODO: Implement a payment system. For now, just return them to the main
     melon listing page."""
     flash("Sorry! Checkout will be implemented in a future version of ubermelon.")
+    return redirect("/melons")
+
+@app.route("/logout")
+def logout():
+    """Logs the user out, clears the session"""
+    session.clear()
+    flash("You are logged out. See you soon!")
     return redirect("/melons")
 
 if __name__ == "__main__":
