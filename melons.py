@@ -35,13 +35,17 @@ def shopping_cart():
     accompanying screenshots for details."""
     current_cart = {}
     total = 0
-    for key in session['cart']:
-        melon = model.get_melon_by_id(key)
-        #current_cart[key] = [melon.common_name, melon.price]
-        current_cart[key] = {'common_name': melon.common_name, 'price': melon.price}
-        total += melon.price * session['cart'][key]
-    print current_cart
-    return render_template("cart.html",current_cart = current_cart, total = total)
+    if 'cart' in session:
+        for key in session['cart']:
+            melon = model.get_melon_by_id(key)
+            #current_cart[key] = [melon.common_name, melon.price]
+            #current_car[key] = melon so that the melon can be accessed
+            current_cart[key] = {'common_name': melon.common_name, 'price': melon.price}
+            total += melon.price * session['cart'][key]
+        return render_template("cart.html",current_cart = current_cart, total = total)
+    else:
+        flash('You have nothing in your cart. Keep shopping')
+        return redirect("/melons")
 
 @app.route("/add_to_cart/<int:id>")
 def add_to_cart(id):
@@ -85,6 +89,7 @@ def process_login():
         flash("You aren't a customer yet!")
     else:
         customer = model.get_customer_by_email(email)
+        #next line is redundant, but not egregious - Lindsay
         first_name, last_name, email = customer.first_name, customer.last_name, customer.email
         session['customer'] = email
         flash("Logged in. Shop away!")
@@ -105,6 +110,24 @@ def logout():
     flash("You are logged out. See you soon!")
     return redirect("/melons")
 
+@app.route("/newcustomer")
+def new_customer():
+    """Where users can sign up to join ubermelon."""
+    return render_template("customer_signup.html")
+
+@app.route("/newcustomer", methods=["POST"])
+def new_customer_welcome():
+    """Welcomes new user"""
+    email = request.form.get("email")
+    first_name = request.form.get("first_name")
+    last_name = request.form.get("last_name")
+    password = request.form.get("password")
+    message = model.add_customer_to_db(email,first_name,last_name,password)
+    session['customer'] = email
+    flash(message)
+    return redirect("/melons")
+
+ 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, port=port)

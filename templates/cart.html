@@ -2,7 +2,7 @@
 {% block body %}
 <table class="table table-striped">
     <tr><th>Melon Name</th><th>Quantity</th><th>Price</th><th>Total</th></tr>
-
+    {% if current_cart %}
     {% for id in current_cart %}
         <tr><td>{{ current_cart[id]['common_name'] }}</td> 
             <td>{{ session['cart'][id] }}</td>
@@ -10,6 +10,9 @@
             <td>${{ '%.02f' % (session['cart'][id] * current_cart[id]['price']) }}</td>
         </tr>
     {% endfor %}
+    {% else %}
+    <p>You have nothing in your cart. Keep shopping!</p>
+    {% endif %}
 </table>
 <h3>Total: ${{ '%.02f' % total }} </h3>
 <a href="/checkout" class="btn btn-large btn-primary">Check Out</a>

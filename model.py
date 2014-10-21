@@ -1,5 +1,8 @@
 import sqlite3
 
+DB = None
+CONN = None
+
 class Melon(object):
     """A wrapper object that corresponds to rows in the melons table."""
     def __init__(self, id, melon_type, common_name, price, imgurl, flesh_color, rind_color, seedless):
@@ -26,13 +29,14 @@ class Customer(object):
       self.email = email
 
 def connect():
-    conn = sqlite3.connect("melons.db")
-    cursor = conn.cursor()
-    return cursor
+  global DB, CONN
+  CONN = sqlite3.connect("melons.db")
+  DB = CONN.cursor()
+
 
 def get_melons():
     """Query the database for the first 30 melons, wrap each row in a Melon object"""
-    cursor = connect()
+    connect()
     query = """SELECT id, melon_type, common_name,
                       price, imgurl,
                       flesh_color, rind_color, seedless
@@ -40,8 +44,8 @@ def get_melons():
                WHERE imgurl <> ''
                LIMIT 30;"""
 
-    cursor.execute(query)
-    melon_rows = cursor.fetchall()
+    DB.execute(query)
+    melon_rows = DB.fetchall()
 
     melons = []
 
@@ -56,17 +60,17 @@ def get_melons():
     return melons
 
 def get_melon_by_id(id):
+    connect()
     """Query for a specific melon in the database by the primary key"""
-    cursor = connect()
     query = """SELECT id, melon_type, common_name,
                       price, imgurl,
                       flesh_color, rind_color, seedless
                FROM melons
                WHERE id = ?;"""
 
-    cursor.execute(query, (id,))
+    DB.execute(query, (id,))
 
-    row = cursor.fetchone()
+    row = DB.fetchone()
     
     if not row:
         return None
@@ -77,12 +81,20 @@ def get_melon_by_id(id):
     return melon
 
 def get_customer_by_email(email):
-    cursor = connect()
-    query = """SELECT givenname, surname, email FROM customers WHERE email = ?"""
-    cursor.execute(query, (email,))
-    row = cursor.fetchone()
-    if row == None:
-      return None
-    else:
-      customer = Customer(row[0], row[1], row[2])
-      return customer
+  connect()
+  query = """SELECT givenname, surname, email FROM customers WHERE email = ?"""
+  DB.execute(query, (email,))
+  row = DB.fetchone()
+  if row == None:
+    return None
+  else:
+    customer = Customer(row[0], row[1], row[2])
+    return customer
+
+def add_customer_to_db(email, first_name, last_name, password):
+  connect()
+  query = """INSERT INTO customers (email, givenname, surname, password) VALUES (?, ?, ?, ?)"""
+  DB.execute(query, (email, first_name, last_name, password))
+  CONN.commit()
+  message = "Welcome to Ubermelon!"
+  return message
